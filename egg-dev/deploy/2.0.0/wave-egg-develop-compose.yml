@@ -1,0 +1,27 @@
+version: '3'
+services:
+  egg:
+    image: 193.168.1.126:8888/intranet-develop/wave-egg:2.0.0
+    container_name: wave-egg
+    ports:
+      - "3000:3000"   
+    volumes:
+      - "/etc/hosts:/etc/hosts"
+      - "/etc/localtime:/etc/localtime:ro" 
+    environment:
+      - "APP_PORT=3000"
+      - "ACM_ENDPOINT=acm.aliyun.com"
+      - "CONFIG_MIDDLEWARE=acm"
+      - "ACM_NAMESPACE=5c53c8f9-ce98-4192-9841-61966ffe3e7d"
+      - "ACM_ACCESS_KEY=LTAItdM1DrDEbKFs"
+      - "ACM_SECRET_KEY=t5Pz5tGp0ffzre73TuuPssa8ayhX1i"
+      - "ACM_GROUP=food.eggcms"
+      - "ACM_DATA_ID=serverpath"
+      - "NET_WEB_HOST=193.168.1.192:3000"
+      - "MONGOOSE_URL=mongodb://eggcmsadmin:eggcmsadmin123@193.168.1.167:27017/eggcms"
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 2G

@@ -1,0 +1,191 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wave-egg-configmap-online
+  namespace: online-frontend
+data:
+  NODE_ENV: online
+  APP_NAME: wave-egg
+  CONFIG_MIDDLEWARE: acm-config
+  ACM_ENDPOINT: acm.aliyun.com
+  ACM_NAMESPACE: 4c473266-f3ea-4fd5-a355-d900a8d00247
+  ACM_ACCESS_KEY: LTAItdM1DrDEbKFs
+  ACM_SECRET_KEY: t5Pz5tGp0ffzre73TuuPssa8ayhX1i
+  ACM_GROUP: food.egg
+  ACM_DATA_ID: "app,mongodb,oss,alilog,proxy,wechat,facepp"
+  ACM_TIME_OUT: "6000"
+  MORGAN_DIR: "logs"
+  MORGAN_FILENAME: 'nodejs_access_log.{YYYY-MM-DD}.txt'
+  MORGAN_FORMAT: '[:date][:remote-addr][:server-addr][:host][:process-name][:request-first][:session][:status][:content-length][:response-time[3]ms]'
+  MORGAN_INTERVAL: "1d"
+  LOG4JS_FILE_NAME: 'logs/nodejs_app_runtime_log.'
+  INTERFACE_ADDRESS: 'http://interface.wavewisdom-bj.com/doc'
+  WAVE_HOST: 'http://www.wavewisdom-bj.com'
+  ODIN_HOST: 'http://argus-net.wavewisdom-bj.com'
+---
+apiVersion: apps/v1 
+kind: Deployment
+metadata:
+  name: wave-egg-deployment-online
+  namespace: online-frontend
+  labels:
+    deployment: wave-egg-deployment-online
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      pod: wave-egg-pod-online
+  template:
+    metadata:
+      labels:
+        pod: wave-egg-pod-online
+    spec:
+      nodeSelector:                    
+        nodeGroup: online
+      containers:
+      - name: wave-egg
+        image: registry.cn-beijing.aliyuncs.com/wavewisdom-bj-registry/wave-egg:1.8.0
+        #command: ['sh','-c','apk --no-cache add tzdata && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime &&  echo "Asia/Shanghai" > /etc/timezone && node dist/backend/main/main.js '] #修改时区并运行docker
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: host-time
+          mountPath: /etc/localtime
+        ports:
+        - containerPort: 8080
+        env:
+        - name: NODE_ENV
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-online
+              key: NODE_ENV
+        - name: INTERFACE_ADDRESS
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-online
+              key: INTERFACE_ADDRESS
+        - name: APP_NAME
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-online
+              key: APP_NAME
+        - name: CONFIG_MIDDLEWARE
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-online
+              key: CONFIG_MIDDLEWARE
+        - name: ACM_ENDPOINT
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-online     
+              key: ACM_ENDPOINT   
+        - name: ACM_NAMESPACE
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-online     
+              key: ACM_NAMESPACE   
+        - name: ACM_ACCESS_KEY
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-online     
+              key: ACM_ACCESS_KEY   
+        - name: ACM_SECRET_KEY
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-online     
+              key: ACM_SECRET_KEY
+        - name: ACM_GROUP
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-online
+              key: ACM_GROUP
+        - name: ACM_DATA_ID
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-online
+              key: ACM_DATA_ID
+        - name: ACM_TIME_OUT
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-online     
+              key: ACM_TIME_OUT
+        - name: MORGAN_DIR
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-online     
+              key:  MORGAN_DIR   
+        - name: MORGAN_FILENAME
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-online     
+              key:  MORGAN_FILENAME    
+        - name: MORGAN_FORMAT
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-online     
+              key:  MORGAN_FORMAT   
+        - name: MORGAN_INTERVAL
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-online     
+              key:  MORGAN_INTERVAL  
+        - name: LOG4JS_FILE_NAME
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-online     
+              key:  LOG4JS_FILE_NAME
+        - name: WAVE_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: wave-egg-configmap-online     
+              key: WAVE_HOST
+        - name: ODIN_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: wave-egg-configmap-online   
+              key: ODIN_HOST
+      imagePullSecrets:
+      - name: registry-secret
+      volumes:
+      - name: host-time
+        hostPath:
+          path: /etc/localtime
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: wave-egg-ingress-online
+  namespace: online-frontend
+spec:
+  rules:                                                     
+  - host: www.wavewisdom-bj.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: wave-egg-service-online
+          servicePort: 80
+  - host: www.wavewisdom.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: wave-egg-service-online
+          servicePort: 80       
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wave-egg-service-online
+  namespace: online-frontend
+  labels:
+    service: wave-egg-service-online
+spec:
+  selector:
+    pod: wave-egg-pod-online
+  ports:
+  - protocol: TCP
+    name: http
+    port: 80
+    targetPort: 8080
+  type: ClusterIP

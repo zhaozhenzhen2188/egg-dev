@@ -1,0 +1,28 @@
+site_name: 官网
+nav:
+- 说明: index.md
+- v.1.8.1:
+  - 新增需求: egg-1.8.1/new-demand.md
+  - 修复问题: egg-1.8.1/fix-bug.md 
+  - 遗留问题: egg-1.8.1/remain-bug.md
+  - 线上环境（online-frontend）: egg-1.8.1/online.md
+  - 预线上环境（default）: egg-1.8.1/pre-online.md
+- v.2.0.0:
+  - 新增需求: egg-2.0.0/new-demand.md
+  - 修复问题: egg-2.0.0/fix-bug.md 
+  - 遗留问题: egg-2.0.0/remain-bug.md
+  - 线上环境（online-frontend）: egg-2.0.0/online.md
+  - 预线上环境（default）: egg-2.0.0/pre-online.md
+
+dev_addr: 127.0.0.1:4050 #本地调试端口,默认8000
+site_dir: ./dist # 静态资源输出文件夹
+theme: #主题
+  name: material
+  language: 'zh'
+  logo:
+    icon: ' '
+  palette:
+    primary: 'Light Blue'
+    accent: 'Light Blue'
+  feature:
+    tabs: false

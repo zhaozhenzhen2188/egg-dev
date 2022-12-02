@@ -1,0 +1,27 @@
+{
+  "name": "wave-egg",
+  "version": "1.0.0",
+  "description": "wave-egg system",
+  "author": "shenxing <81379162@qq.com>",
+  "private": true,
+  "scripts": {
+    "install": "cd frontend && npm i && cd ../DoraCMS && npm i",
+    "dev:app": "cd frontend && npm run dev --open",
+    "start": "cd DoraCMS && npm run start",
+    "dev": "cd DoraCMS && npm run dev --open",
+    "build": "npm run build:app",
+    "build:app": "cd frontend && npm run build"
+  },
+  "dependencies": {
+    
+  },
+  "engines": {
+    "node": ">= 6.0.0",
+    "npm": ">= 3.0.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not ie <= 8"
+  ]
+}

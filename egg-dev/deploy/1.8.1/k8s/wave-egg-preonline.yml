@@ -1,0 +1,190 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wave-egg-configmap-preonline
+  namespace: default
+data:
+  NODE_ENV: production
+  APP_NAME: wave-egg
+  CONFIG_MIDDLEWARE: acm-config
+  ACM_ENDPOINT: acm.aliyun.com
+  ACM_NAMESPACE: 1d2f6afc-3a26-4a71-a238-d8ea3202c2c1
+  ACM_ACCESS_KEY: LTAItdM1DrDEbKFs
+  ACM_SECRET_KEY: t5Pz5tGp0ffzre73TuuPssa8ayhX1i
+  ACM_GROUP: food.egg
+  ACM_DATA_ID: "app,mongodb,oss,alilog,proxy,wechat"
+  ACM_TIME_OUT: "6000"
+  MORGAN_DIR: "logs"
+  MORGAN_FILENAME: 'nodejs_access_log.{YYYY-MM-DD}.txt'
+  MORGAN_FORMAT: '[:date][:remote-addr][:server-addr][:host][:process-name][:request-first][:session][:status][:content-length][:response-time[3]ms]'
+  MORGAN_INTERVAL: "1d"
+  LOG4JS_FILE_NAME: 'logs/nodejs_app_runtime_log.'
+  INTERFACE_ADDRESS: 'http://test-interface.wavewisdom-bj.com/doc'
+  WAVE_HOST: 'http://test-www.wavewisdom-bj.com'
+  SANDBOX: 'true'
+  ODIN_HOST: 'http://test-argus-net.wavewisdom-bj.com'
+---
+apiVersion: apps/v1 
+kind: Deployment
+metadata:
+  name: wave-egg-deployment-preonline
+  namespace: default
+  labels:
+    deployment: wave-egg-deployment-preonline
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      pod: wave-egg-pod-preonline
+  template:
+    metadata:
+      labels:
+        pod: wave-egg-pod-preonline
+    spec:
+      nodeSelector:                    
+        nodeGroup: preonline
+      containers:
+      - name: wave-egg
+        image: registry.cn-beijing.aliyuncs.com/wavewisdom-bj-registry-develop/wave-egg:1.8.0
+        #command: ['sh','-c','apk --no-cache add tzdata && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime &&  echo "Asia/Shanghai" > /etc/timezone && node dist/backend/main/main.js '] #修改时区并运行docker
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: host-time
+          mountPath: /etc/localtime
+        ports:
+        - containerPort: 8080
+        env:
+        - name: NODE_ENV
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-preonline
+              key: NODE_ENV
+        - name: INTERFACE_ADDRESS
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-preonline
+              key: INTERFACE_ADDRESS
+        - name: APP_NAME
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-preonline
+              key: APP_NAME
+        - name: CONFIG_MIDDLEWARE
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-preonline
+              key: CONFIG_MIDDLEWARE
+        - name: ACM_ENDPOINT
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-preonline     
+              key: ACM_ENDPOINT   
+        - name: ACM_NAMESPACE
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-preonline     
+              key: ACM_NAMESPACE   
+        - name: ACM_ACCESS_KEY
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-preonline     
+              key: ACM_ACCESS_KEY   
+        - name: ACM_SECRET_KEY
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-preonline     
+              key: ACM_SECRET_KEY
+        - name: ACM_GROUP
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-preonline
+              key: ACM_GROUP
+        - name: ACM_DATA_ID
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-preonline
+              key: ACM_DATA_ID
+        - name: ACM_TIME_OUT
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-preonline
+              key: ACM_TIME_OUT
+        - name: MORGAN_DIR
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-preonline     
+              key:  MORGAN_DIR   
+        - name: MORGAN_FILENAME
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-preonline     
+              key:  MORGAN_FILENAME    
+        - name: MORGAN_FORMAT
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-preonline     
+              key:  MORGAN_FORMAT   
+        - name: MORGAN_INTERVAL
+          valueFrom:     
+            configMapKeyRef:
+              name: wave-egg-configmap-preonline     
+              key:  MORGAN_INTERVAL  
+        - name: LOG4JS_FILE_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: wave-egg-configmap-preonline     
+              key:  LOG4JS_FILE_NAME
+        - name: WAVE_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: wave-egg-configmap-preonline     
+              key: WAVE_HOST
+        - name: ODIN_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: wave-egg-configmap-preonline     
+              key: ODIN_HOST
+        - name: SANDBOX
+          valueFrom:
+            configMapKeyRef:
+              name: wave-egg-configmap-preonline     
+              key: SANDBOX
+      imagePullSecrets:
+      - name: registry-secret
+      volumes:
+      - name: host-time
+        hostPath:
+          path: /etc/localtime
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wave-egg-service-preonline
+  namespace: default
+  labels:
+    service: wave-egg-service-preonline
+spec:
+  selector:
+    pod: wave-egg-pod-preonline
+  ports:
+  - protocol: TCP
+    name: http
+    port: 80
+    targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: wave-egg-ingress-preonline
+  namespace: default
+spec:
+  rules:                                                     
+  - host: test-www.wavewisdom-bj.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: wave-egg-service-preonline
+          servicePort: 80
